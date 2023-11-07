@@ -597,6 +597,11 @@ InstructionQueue::insert(const DynInstPtr &new_inst)
         addIfReady(new_inst);
     }
 
+    if (new_inst->isCondCtrl()) {
+        memDepUnit[new_inst->threadNumber].insertUnresolvedBranch(
+            new_inst->seqNum);
+    }
+
     ++iqStats.instsAdded;
 
     count[new_inst->threadNumber]++;
@@ -999,6 +1004,8 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
                completed_inst->isWriteBarrier()) {
         // Completes a non mem ref barrier
         memDepUnit[tid].completeInst(completed_inst);
+    } else if (completed_inst->isCondCtrl()) {
+        memDepUnit[tid].resolveUnresolvedBranch(completed_inst->seqNum);
     }
 
     for (int dest_reg_idx = 0;
@@ -1211,6 +1218,10 @@ InstructionQueue::doSquash(ThreadID tid)
             squashed_inst->isSquashedInIQ()) {
             --squash_it;
             continue;
+        }
+
+        if (squashed_inst->isCondCtrl()) {
+            memDepUnit[tid].removeUnresolvedBranch(squashed_inst->seqNum);
         }
 
         if (!squashed_inst->isIssued() ||

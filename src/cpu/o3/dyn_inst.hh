@@ -187,6 +187,7 @@ class DynInst : public ExecContext, public RefCounted
         ReqMade,
         MemOpDone,
         HtmFromTransaction,
+        WaitingForBranch,
         MaxFlags
     };
 
@@ -440,6 +441,13 @@ class DynInst : public ExecContext, public RefCounted
      */
     bool hitExternalSnoop() const { return instFlags[HitExternalSnoop]; }
     void hitExternalSnoop(bool f) { instFlags[HitExternalSnoop] = f; }
+
+    /**
+     * True if this load instruction is waiting for a branch to resolve before
+     * issuing. This is to prevent the Spectre side-channel attack.
+     */
+    bool waitingForBranch() const { return instFlags[WaitingForBranch]; }
+    void waitingForBranch(bool f) { instFlags[WaitingForBranch] = f; }
 
     /**
      * Returns true if the DTB address translation is being delayed due to a hw

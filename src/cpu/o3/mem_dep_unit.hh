@@ -161,6 +161,21 @@ class MemDepUnit
     /** Debugging function to dump the lists of instructions. */
     void dumpLists();
 
+    /**
+     * Insert the sequence number of an unresolved branch.
+    */
+    void insertUnresolvedBranch(InstSeqNum seq_num);
+
+    /**
+     * Remove unresolved branch when it is squashed.
+    */
+    void removeUnresolvedBranch(InstSeqNum seq_num);
+
+    /**
+      * Resolve unresolved branch when it finishes executing.
+    */
+    void resolveUnresolvedBranch(InstSeqNum seq_num);
+
   private:
 
     /** Completes a memory instruction. */
@@ -277,6 +292,29 @@ class MemDepUnit
          *  store. */
         statistics::Scalar conflictingStores;
     } stats;
+
+    /**
+     * Helper function to get the oldest unresolved branch sequence number. This
+     * function assumes the presence of at least 1 unresolved branch.
+    */
+    InstSeqNum getOldestUnresolvedBranchSeqNum();
+
+    /**
+     * Helper function to see if, given an instruction SeqNum as input, there is
+     * an older unresolved branch instruction.
+    */
+    bool isOlderUnresolvedBranchInstPresent(InstSeqNum seq_num);
+
+    /**
+     * Flag to determine if speculative loads should be delayed if they depend
+     * on a branch.
+    */
+    bool delayCtrlSpecLoad;
+
+    /**
+     * Set of unresolved branches.
+    */
+    std::set<InstSeqNum> unresolvedBranches;
 };
 
 } // namespace o3

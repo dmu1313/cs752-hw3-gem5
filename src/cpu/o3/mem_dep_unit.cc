@@ -38,6 +38,7 @@
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
 #include "debug/MemDepUnit.hh"
+#include "debug/Hw3Task2.hh"
 #include "params/BaseO3CPU.hh"
 
 namespace gem5
@@ -59,7 +60,8 @@ MemDepUnit::MemDepUnit(const BaseO3CPUParams &params)
       depPred(params.store_set_clear_period, params.SSITSize,
               params.LFSTSize),
       iqPtr(NULL),
-      stats(nullptr)
+      stats(nullptr),
+      delayCtrlSpecLoad(params.delayCtrlSpecLoad)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
 }
@@ -101,6 +103,7 @@ MemDepUnit::init(const BaseO3CPUParams &params, ThreadID tid, CPU *cpu)
 
     std::string stats_group_name = csprintf("MemDepUnit__%i", tid);
     cpu->addStatGroup(stats_group_name.c_str(), &stats);
+    delayCtrlSpecLoad = params.delayCtrlSpecLoad;
 }
 
 MemDepUnit::MemDepUnitStats::MemDepUnitStats(statistics::Group *parent)
@@ -598,9 +601,49 @@ MemDepUnit::findInHash(const DynInstConstPtr &inst)
     return (*hash_it).second;
 }
 
+InstSeqNum MemDepUnit::getOldestUnresolvedBranchSeqNum() {
+    if (this->unresolvedBranches.size() > 0) {
+        return *(this->unresolvedBranches.begin());
+    }
+    return 0;
+}
+
+bool MemDepUnit::isOlderUnresolvedBranchInstPresent(InstSeqNum seq_num) {
+    if (this->unresolvedBranches.size() > 0) {
+        InstSeqNum oldestBranchSeqNum = *(this->unresolvedBranches.begin());
+        if (seq_num > oldestBranchSeqNum) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void
 MemDepUnit::moveToReady(MemDepEntryPtr &woken_inst_entry)
 {
+    DPRINTF(Hw3Task2, "this->delayCtrlSpecLoad: %d\n", this->delayCtrlSpecLoad);
+    if (this->delayCtrlSpecLoad) {
+        if (woken_inst_entry->inst && woken_inst_entry->inst->isLoad()) {
+            bool olderBranchPresent = this->isOlderUnresolvedBranchInstPresent(
+                woken_inst_entry->inst->seqNum);
+            if (olderBranchPresent) {
+                InstSeqNum oldestBranchSeqNum = getOldestUnresolvedBranchSeqNum();
+                // This load instruction is younger than the oldest unresolved
+                // branch. Don't let this load instruction continue.
+                DPRINTF(Hw3Task2, "Not adding instruction to the ready list. "
+                        "Load instruction [sn:%lli] is younger than the oldest "
+                        "unresolved branch [sn:%lli].\n",
+                        woken_inst_entry->inst->seqNum, oldestBranchSeqNum);
+                woken_inst_entry->inst->waitingForBranch(true);
+                return;
+            }
+            // Not sure if this is necessary.
+            else {
+                woken_inst_entry->inst->waitingForBranch(false);
+            }
+        }
+    }
+
     DPRINTF(MemDepUnit, "Adding instruction [sn:%lli] "
             "to the ready list.\n", woken_inst_entry->inst->seqNum);
 
@@ -638,6 +681,35 @@ MemDepUnit::dumpLists()
 #ifdef GEM5_DEBUG
     cprintf("Memory dependence entries: %i\n", MemDepEntry::memdep_count);
 #endif
+}
+
+void MemDepUnit::insertUnresolvedBranch(InstSeqNum seq_num) {
+    if (!this->delayCtrlSpecLoad) return;
+    this->unresolvedBranches.insert(seq_num);
+}
+
+void MemDepUnit::removeUnresolvedBranch(InstSeqNum seq_num) {
+    if (!this->delayCtrlSpecLoad) return;
+    this->unresolvedBranches.erase(seq_num);
+}
+
+void MemDepUnit::resolveUnresolvedBranch(InstSeqNum seq_num) {
+    if (!this->delayCtrlSpecLoad) return;
+    this->removeUnresolvedBranch(seq_num);
+
+    for (std::list<DynInstPtr>::iterator it = this->instList->begin(); 
+         it != this->instList->end(); 
+         it++) 
+    {
+        if ((*it)->waitingForBranch()) {
+            if (this->isOlderUnresolvedBranchInstPresent((*it)->seqNum)) {
+                return;
+            } else {
+                MemDepEntryPtr inst_entry = findInHash(*it);
+                moveToReady(inst_entry);
+            }
+        }
+    }
 }
 
 } // namespace o3
