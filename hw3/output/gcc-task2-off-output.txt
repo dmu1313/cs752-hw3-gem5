@@ -1,0 +1,24 @@
+cs752@cs752:~/cs752-hw3-gem5$ build/X86/gem5.opt ./hw3/ece752_hw2_f2023_sample.py
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 23.0.1.0
+gem5 compiled Nov  7 2023 09:28:19
+gem5 started Nov 12 2023 00:51:23
+gem5 executing on cs752, pid 4782
+command line: build/X86/gem5.opt ./hw3/ece752_hw2_f2023_sample.py
+
+warn: The `CustomResource` class is deprecated. Please use an `AbstractResource` subclass instead.
+Beginning simulation!
+Global frequency set at 1000000000000 ticks per second
+warn: No dot file generated. Please install pydot to generate the dot file and pdf.
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (8192 Mbytes) does not match the address range assigned (1024 Mbytes)
+src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
+board.remote_gdb: Listening for connections on port 7000
+src/sim/simulate.cc:194: info: Entering event queue @ 0.  Starting simulation...
+src/sim/syscall_emul.cc:85: warn: ignoring syscall rt_sigaction(...)
+      (further warnings will be suppressed)
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+src/sim/mem_state.cc:443: info: Increasing stack size by one page.
+warn: No behavior was set by the user for max instructions. Default behavior is exiting the simulation.
