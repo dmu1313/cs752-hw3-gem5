@@ -2074,7 +2074,7 @@
                                 "name": "workload",
                                 "path": "board.processor.cores.core.workload",
                                 "cmd": [
-                                    "../spectre/spectre.gcc"
+                                    "./hw3/spectre/spectre.gcc"
                                 ],
                                 "cwd": "/home/cs752/cs752-hw3-gem5",
                                 "drivers": [],
@@ -2083,7 +2083,7 @@
                                 "errout": "cerr",
                                 "euid": 100,
                                 "eventq_index": 0,
-                                "executable": "../spectre/spectre.gcc",
+                                "executable": "./hw3/spectre/spectre.gcc",
                                 "gid": 100,
                                 "input": "cin",
                                 "kvmInSE": false,
