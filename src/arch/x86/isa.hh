@@ -71,8 +71,9 @@ class ISA : public BaseISA
     using Params = X86ISAParams;
 
     ISA(const Params &p);
-    bool fuzz_TSC;
-   
+    bool fuzz_TSC_method_1;
+    bool fuzz_TSC_method_2;
+    bool fuzz_TSC_method_3; 
     RegVal readMiscRegNoEffect(RegIndex idx) const override;
     RegVal readMiscReg(RegIndex idx) override;
 

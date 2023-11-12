@@ -55,6 +55,15 @@ class X86ISA(BaseISA):
         "HygonGenuine", "Vendor string for CPUID instruction"
     )
 
-    fuzz_TSC = Param.Bool(
-            True, "Value for enabling TSC fuzzing"
+    fuzz_TSC_method_1 = Param.Bool(
+            False, "Value for enabling TSC fuzzing with random multiplication"
     )
+
+    fuzz_TSC_method_2 = Param.Bool(
+            False, "Value for enabling TSC fuzzing with random addition"
+    )
+
+    fuzz_TSC_method_3 = Param.Bool(
+            False, "Value for enabling TSC fuzzing with random addition"
+    )
+

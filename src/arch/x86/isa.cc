@@ -151,7 +151,7 @@ RegClass matRegClass(MatRegClass, MatRegClassName, 1, debug::MatRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string), fuzz_TSC(p.fuzz_TSC)
+ISA::ISA(const X86ISAParams &p) : BaseISA(p), vendorString(p.vendor_string), fuzz_TSC_method_1(p.fuzz_TSC_method_1), fuzz_TSC_method_2(p.fuzz_TSC_method_2), fuzz_TSC_method_3(p.fuzz_TSC_method_3)
 {
     fatal_if(vendorString.size() != 12,
              "CPUID vendor string must be 12 characters\n");
@@ -219,18 +219,21 @@ RegVal
 ISA::readMiscReg(RegIndex idx)
 {
     if (idx == misc_reg::Tsc) {
- 	if (ISA::fuzz_TSC == true) {
-		//	std::cout << "Fuzzing TSC register" << std::endl;
-		float tsc_count = regVal[misc_reg::Tsc] + tc->getCpuPtr()->curCycle();
-		
+	float tsc_count = regVal[misc_reg::Tsc] + tc->getCpuPtr()->curCycle();
+
+ 	if (ISA::fuzz_TSC_method_1 == true) {
 		return tsc_count * (  rand() % 5 + 2);
+	}
 
-		//return lround(regVal[misc_reg::Tsc] + tc->getCpuPtr()->curCycle());
-
+	else if (ISA::fuzz_TSC_method_2 == true) {
+		return tsc_count + (rand() % 10000 + 1000);
+	}
+	else if (ISA::fuzz_TSC_method_3 == true) {
+		return tsc_count + (rand() % 10 + 100);
 	}
 
 	else {
-		return regVal[misc_reg::Tsc] + tc->getCpuPtr()->curCycle();
+		return tsc_count;
 	}
     }
 
