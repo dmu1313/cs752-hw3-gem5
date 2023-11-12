@@ -310,6 +310,7 @@ class MemDepUnit
      * on a branch.
     */
     bool delayCtrlSpecLoad;
+    bool delayTaintedLoad;
 
     /**
      * Set of unresolved branches.

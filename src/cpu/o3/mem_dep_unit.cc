@@ -39,6 +39,7 @@
 #include "cpu/o3/limits.hh"
 #include "debug/MemDepUnit.hh"
 #include "debug/Hw3Task2.hh"
+//#include "debug/HwTask3.hh"
 #include "params/BaseO3CPU.hh"
 
 namespace gem5
@@ -61,7 +62,8 @@ MemDepUnit::MemDepUnit(const BaseO3CPUParams &params)
               params.LFSTSize),
       iqPtr(NULL),
       stats(nullptr),
-      delayCtrlSpecLoad(params.delayCtrlSpecLoad)
+      delayCtrlSpecLoad(params.delayCtrlSpecLoad),
+      delayTaintedLoad(params.delayTaintedLoad)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
 }
@@ -104,6 +106,7 @@ MemDepUnit::init(const BaseO3CPUParams &params, ThreadID tid, CPU *cpu)
     std::string stats_group_name = csprintf("MemDepUnit__%i", tid);
     cpu->addStatGroup(stats_group_name.c_str(), &stats);
     delayCtrlSpecLoad = params.delayCtrlSpecLoad;
+    delayTaintedLoad = params.delayTaintedLoad;
 }
 
 MemDepUnit::MemDepUnitStats::MemDepUnitStats(statistics::Group *parent)
@@ -622,24 +625,56 @@ void
 MemDepUnit::moveToReady(MemDepEntryPtr &woken_inst_entry)
 {
     DPRINTF(Hw3Task2, "this->delayCtrlSpecLoad: %d\n", this->delayCtrlSpecLoad);
+    DPRINTF(Hw3Task2, "this->delayTaintedLoad: %d\n", this->delayTaintedLoad);
     if (this->delayCtrlSpecLoad) {
         if (woken_inst_entry->inst && woken_inst_entry->inst->isLoad()) {
             bool olderBranchPresent = this->isOlderUnresolvedBranchInstPresent(
                 woken_inst_entry->inst->seqNum);
             if (olderBranchPresent) {
-                InstSeqNum oldestBranchSeqNum = getOldestUnresolvedBranchSeqNum();
-                // This load instruction is younger than the oldest unresolved
-                // branch. Don't let this load instruction continue.
-                DPRINTF(Hw3Task2, "Not adding instruction to the ready list. "
-                        "Load instruction [sn:%lli] is younger than the oldest "
+		    if(this->delayTaintedLoad)
+		    {
+			bool taint_check = woken_inst_entry->inst->tainted();
+			if(!taint_check)
+			{
+				DPRINTF(Hw3Task2, "Instruction is not tainted. "
+                        	"Load instruction [sn:%lli] is allowed to issue. ",
+                        	woken_inst_entry->inst->seqNum);
+				woken_inst_entry->inst->tainted(true);
+			}
+			else if(taint_check)
+			{
+				DPRINTF(Hw3Task2, "Instruction is tainted. "
+                        	"Load instruction [sn:%lli] is not allowed to issue. ",
+                        	woken_inst_entry->inst->seqNum);
+				InstSeqNum oldestBranchSeqNum = getOldestUnresolvedBranchSeqNum();
+                		// This load instruction is younger than the oldest unresolved
+                		// branch. Don't let this load instruction continue.
+                		DPRINTF(Hw3Task2, "Not adding instruction to the ready list. "
+                       		"Load instruction [sn:%lli] is younger than the oldest "
+                        	"unresolved branch [sn:%lli].\n",
+                        	woken_inst_entry->inst->seqNum, oldestBranchSeqNum);
+                		woken_inst_entry->inst->waitingForBranch(true);
+                		return;
+			}
+		    }
+		    else
+		    {
+		    	InstSeqNum oldestBranchSeqNum = getOldestUnresolvedBranchSeqNum();
+                	// This load instruction is younger than the oldest unresolved
+                	// branch. Don't let this load instruction continue.
+                	DPRINTF(Hw3Task2, "Not adding instruction to the ready list. "
+                       	"Load instruction [sn:%lli] is younger than the oldest "
                         "unresolved branch [sn:%lli].\n",
                         woken_inst_entry->inst->seqNum, oldestBranchSeqNum);
-                woken_inst_entry->inst->waitingForBranch(true);
-                return;
-            }
+                	woken_inst_entry->inst->waitingForBranch(true);
+                	return;	    
+		    
+		    }
+	    }
             // Not sure if this is necessary.
             else {
                 woken_inst_entry->inst->waitingForBranch(false);
+		woken_inst_entry->inst->tainted(false);
             }
         }
     }

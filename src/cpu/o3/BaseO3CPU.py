@@ -193,3 +193,4 @@ class BaseO3CPU(BaseCPU):
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
     delayCtrlSpecLoad = Param.Bool(False, "Should delay speculative loads dependent on branches")
+    delayTaintedLoad = Param.Bool(False, "Should delay only tainted loads which is second load based on first speculative load")

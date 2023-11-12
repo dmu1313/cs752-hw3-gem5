@@ -188,6 +188,7 @@ class DynInst : public ExecContext, public RefCounted
         MemOpDone,
         HtmFromTransaction,
         WaitingForBranch,
+	Tainted,
         MaxFlags
     };
 
@@ -448,6 +449,13 @@ class DynInst : public ExecContext, public RefCounted
      */
     bool waitingForBranch() const { return instFlags[WaitingForBranch]; }
     void waitingForBranch(bool f) { instFlags[WaitingForBranch] = f; }
+
+     /**
+     * True if this load instruction is waiting for a branch to resolve before
+     * issuing. This is to prevent the Spectre side-channel attack.
+     */
+    bool tainted() const { return instFlags[Tainted]; }
+    void tainted(bool f) { instFlags[Tainted] = f; }
 
     /**
      * Returns true if the DTB address translation is being delayed due to a hw

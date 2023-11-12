@@ -27,12 +27,12 @@ processor = SimpleProcessor(isa=ISA.X86,cpu_type=CPUTypes.O3, num_cores=1)
 # processor.cores[0].core.isa[0].fuzz_TSC_method_3=True
 
 # flag for delaying control-speculative loads
-processor.cores[0].core.delayCtrlSpecLoad=False
+processor.cores[0].core.delayCtrlSpecLoad=True
 
 # flag for delaying tainted load
-# processor.cores[0].core.delayTaintedLoad=False
+processor.cores[0].core.delayTaintedLoad=True
 
-# processor.cores[0].core.max_insts_any_thread=250000000
+processor.cores[0].core.max_insts_any_thread=250000000
 
 # Add them to the board
 board = SimpleBoard(
@@ -42,13 +42,12 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
     )
 
-binary = CustomResource("./hw3/spectre/spectre.gcc");
-board.set_se_binary_workload(binary)
+#binary = CustomResource("./hw3/spectre/spectre.gcc");
+#board.set_se_binary_workload(binary)
 
-# board.set_se_binary_workload(
-#    binary = CustomResource("./hw3/spec2006/gcc/gcc_base.x86_64_sse"),
-#    arguments = ["./hw3/spec2006/gcc/input/scilab.i", "-o scilab.o"],
-#    )
+board.set_se_binary_workload(
+    binary = CustomResource("./hw3/spec2006/gcc/gcc_base.x86_64_sse"),
+    arguments = ["./hw3/spec2006/gcc/input/scilab.i", "-o scilab.o"])
 
 simulator = Simulator(board=board)
 
