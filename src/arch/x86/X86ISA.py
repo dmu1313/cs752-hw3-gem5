@@ -41,7 +41,7 @@ class X86ISA(BaseISA):
     type = "X86ISA"
     cxx_class = "gem5::X86ISA::ISA"
     cxx_header = "arch/x86/isa.hh"
-
+    
     # Here we set the default vector string to "HygonGenuine". Previously this
     # "M5 Simulator" but due to stricter checks in newer versions of GLIBC,
     # the CPUID is checked for the required features. As "M5 Simulator" is not
@@ -53,4 +53,8 @@ class X86ISA(BaseISA):
     # "HygonGenuine" instead.
     vendor_string = Param.String(
         "HygonGenuine", "Vendor string for CPUID instruction"
+    )
+
+    fuzz_TSC = Param.Bool(
+            True, "Value for enabling TSC fuzzing"
     )

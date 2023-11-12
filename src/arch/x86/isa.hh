@@ -58,7 +58,7 @@ class ISA : public BaseISA
             SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
 
     std::string vendorString;
-
+    
   public:
     void clear() override;
 
@@ -71,15 +71,15 @@ class ISA : public BaseISA
     using Params = X86ISAParams;
 
     ISA(const Params &p);
-
+    bool fuzz_TSC;
+   
     RegVal readMiscRegNoEffect(RegIndex idx) const override;
     RegVal readMiscReg(RegIndex idx) override;
 
     void setMiscRegNoEffect(RegIndex idx, RegVal val) override;
     void setMiscReg(RegIndex idx, RegVal val) override;
-
-    bool
-    inUserMode() const override
+    
+    bool inUserMode() const override
     {
         HandyM5Reg m5reg = readMiscRegNoEffect(misc_reg::M5Reg);
         return m5reg.cpl == 3;
@@ -91,7 +91,7 @@ class ISA : public BaseISA
     void unserialize(CheckpointIn &cp) override;
 
     void setThreadContext(ThreadContext *_tc) override;
-
+    
     std::string getVendorString() const;
 };
 
